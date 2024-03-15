@@ -37,6 +37,11 @@ contract Raffle is VRFConsumerBaseV2 {
     error Raffle__NotEnoughEthSent();
     error Raffle__TransferFail();
     error Raffle__RaffleNotOpen();
+    error Raffle_UpkeepNotNeeded(
+        uint256 currentBalance,
+        uint256 numPlayers,
+        uint256 raffleState
+    );
 
     enum RaffleState {
         OPEN,
@@ -114,12 +119,17 @@ contract Raffle is VRFConsumerBaseV2 {
     }
 
 
-    function pickWinner() external {
-        if (block.timestamp - s_lastTimeStamp < i_interval) {
-            revert();
+    function performUpkeep(bytes calldata /*performData */) external {
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        if (!upkeepNeeded){
+            revert Raffle_UpkeepNotNeeded(
+                address(this).balance,
+                s_players.length,
+                uint256(s_raffleState)
+            );
         }
         s_raffleState = RaffleState.CALCULATING;
-        uint256 requestId = i_vrfCoordinator.requestRandomWords(
+        i_vrfCoordinator.requestRandomWords(
             i_gasLane, // gas lane
             i_subscriptionId, // funded with link
             REQUEST_CONFIRMATIONS, // # of block confirmations
@@ -129,7 +139,7 @@ contract Raffle is VRFConsumerBaseV2 {
     }
 
     function fulfillRandomWords(
-        uint256 requestId,
+        uint256 /* requestId */,
         uint256[] memory randomWords
     ) internal override {
         // Checks
