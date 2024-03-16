@@ -6,7 +6,7 @@ import {HelperConfig} from "../../script/HelperConfig.s.sol";
 import {Raffle} from "../../src/Raffle.sol";
 import {Test, console} from "forge-std/Test.sol";
 
-contract RaffleTest {
+contract RaffleTest is Test{
     Raffle raffle;
     HelperConfig helperConfig;
 
@@ -15,7 +15,7 @@ contract RaffleTest {
     address vrfCoordinator;
     bytes32 gasLane;
     uint64 subscriptionId;
-    uint32 callbackGasLimi;
+    uint32 callbackGasLimit;
 
     address public PLAYER = makeAddr("player");
     uint256 public constant STARTING_USER_BALANCE = 10 ether;
@@ -34,6 +34,6 @@ contract RaffleTest {
     }
 
     function testRaffleInitializesInOpenState() public view {
-        assertEq(raffle.getRaffleState() == Raffle.RaffleState.OPEN);
+        assert(raffle.getRaffleState() == Raffle.RaffleState.OPEN);
     }
 }
