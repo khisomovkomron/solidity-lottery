@@ -65,6 +65,7 @@ contract Raffle is VRFConsumerBaseV2 {
 
     event EnteredRaffle(address indexed player);
     event PickedWinner(address indexed player);
+    event RequestedRaffleWinner(uint256 indexed requestId);
 
     constructor(
         uint256 entranceFee,
@@ -99,7 +100,7 @@ contract Raffle is VRFConsumerBaseV2 {
 
     // when is the winner supposed to be picked?
     /**
-     * @dev This is tthe function that the chainlink Automation nodes call 
+     * @dev This is tthe function that the chainlink Automation nodes call
      * to see if it's time to perform an upkeep.
      * The followint should be true for this to return true:
      * 1. The time interval has passed between raffle runs
@@ -109,7 +110,7 @@ contract Raffle is VRFConsumerBaseV2 {
      */
     function checkUpkeep(
         bytes memory /* checkData */
-    ) public view returns(bool upkeepNeeded, bytes memory /* performData */){
+    ) public view returns (bool upkeepNeeded, bytes memory /* performData */) {
         bool timeHasPassed = (block.timestamp - s_lastTimeStamp) >= i_interval;
         bool isOpen = RaffleState.OPEN == s_raffleState;
         bool hasBalance = address(this).balance > 0;
@@ -118,10 +119,9 @@ contract Raffle is VRFConsumerBaseV2 {
         return (upkeepNeeded, "0x0");
     }
 
-
     function performUpkeep(bytes calldata /*performData */) external {
         (bool upkeepNeeded, ) = checkUpkeep("");
-        if (!upkeepNeeded){
+        if (!upkeepNeeded) {
             revert Raffle_UpkeepNotNeeded(
                 address(this).balance,
                 s_players.length,
@@ -129,13 +129,15 @@ contract Raffle is VRFConsumerBaseV2 {
             );
         }
         s_raffleState = RaffleState.CALCULATING;
-        i_vrfCoordinator.requestRandomWords(
+        uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_gasLane, // gas lane
             i_subscriptionId, // funded with link
             REQUEST_CONFIRMATIONS, // # of block confirmations
             i_callbackGasLimit, // make sure not to spend too much
             NUM_WORDS
         );
+        emit RequestedRaffleWinner(requestId);
+
     }
 
     function fulfillRandomWords(
@@ -166,11 +168,11 @@ contract Raffle is VRFConsumerBaseV2 {
         return i_entranceFee;
     }
 
-    function getRaffleState() external view returns(RaffleState){
+    function getRaffleState() external view returns (RaffleState) {
         return s_raffleState;
     }
 
-    function getPlayer(uint256 indexOfPlayer) external view returns(address){
+    function getPlayer(uint256 indexOfPlayer) external view returns (address) {
         return s_players[indexOfPlayer];
     }
 }
