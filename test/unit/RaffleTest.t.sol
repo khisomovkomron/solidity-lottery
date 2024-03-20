@@ -217,10 +217,10 @@ contract RaffleTest is Test {
             address(raffle)
         );
 
-        // assert(uint256(raffle.getRaffleState()) == 0);
-        // assert(raffle.getRecentWinner() != address(0));
-        // assert(raffle.getLengthOfPlayers() == 0);
-        // assert(previousTimestamp < raffle.getLastTimestamp());
+        assert(uint256(raffle.getRaffleState()) == 0);
+        assert(raffle.getRecentWinner() != address(0));
+        assert(raffle.getLengthOfPlayers() == 0);
+        assert(previousTimestamp < raffle.getLastTimestamp());
         console.log(raffle.getRecentWinner().balance);
         console.log(prize + STARTING_USER_BALANCE);
         assert(raffle.getRecentWinner().balance == STARTING_USER_BALANCE + prize - entranceFee);
